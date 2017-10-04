@@ -1,6 +1,7 @@
 library(ggplot2)
 library(dplyr)
 library(ggthemes)
+library(plotly)
 
 
 
@@ -18,15 +19,15 @@ shinyServer(function(input, output) {
     df$Addition <- ifelse(df$Age >= input$YearInv[1] &
                             df$Age <= input$YearInv[2], input$YearlyInv, 0)
     
+    df$Addition <- ifelse((input$InitInvAge)-1 == df$Age, df$Addition + input$InInv, df$Addition)
+    
     for(i in 1:53){
       
       df$Total[i+1] <- df$Total[i] * (100 + input$IntRate - if(input$WdAge<=df$Age[i]){input$WdRate}else{0}) / 100 + 
-        df$Addition[i] +
-        if(input$InitInvAge==df$Age[i]){input$InInv}else{0}
+        df$Addition[i] 
       
       df$TotalWAddInv[i+1] <- df$TotalWAddInv[i] * (100 + input$IntRate - if(input$WdAge<=df$Age[i]){input$WdRate}else{0}) / 100 + 
         df$Addition[i] + 
-        if(input$InitInvAge==df$Age[i]){input$InInv}else{0} +
         if(input$OneTimeInvAge==df$Age[i]){input$OneTimeInv}else{0} 
       
     }
@@ -38,8 +39,9 @@ shinyServer(function(input, output) {
     
   })
   
-  output$InvTotal <- renderPlot({
-    
+  output$InvTotal <- renderPlotly({
+ 
+  ggplotly(
     ggplot(df(), aes(x=Age)) + 
       geom_line(aes(y=Total), color = "black") + 
       geom_line(aes(y=TotalWAddInv), color = "dark blue", size = 2) +
@@ -47,12 +49,14 @@ shinyServer(function(input, output) {
       scale_x_continuous(breaks = c(18,25,30,35,40,45,50,55,60,65,70)) +
       theme_minimal() + 
       ggtitle("Portfolio Total") +
-      labs(y = "Dollars")
-    
+      labs(y = "Dollars"))
+  
   })
   
-  output$Inv4Pct <- renderPlot({
-    
+  output$Inv4Pct <- renderPlotly({
+
+  
+  p<-  ggplotly(
     ggplot(df(), aes(x=Age)) + 
       geom_line(aes(y=Total4Pct), color = "black") + 
       geom_line(aes(y=TotalWAddInv4Pct), color = "dark blue", size = 2) +
@@ -60,9 +64,7 @@ shinyServer(function(input, output) {
       scale_x_continuous(breaks = c(18,25,30,35,40,45,50,55,60,65,70)) +
       theme_minimal() + 
       ggtitle("Amount Withdrawn") +
-      labs(y = "Dollars")
-    
-    
+      labs(y = "Dollars"))
     
   })
   
